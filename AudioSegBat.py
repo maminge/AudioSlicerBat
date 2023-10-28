@@ -120,14 +120,15 @@ def do_slice_wav(input_file,output_dir):
                        str(GetTime(((cut_samples[i+1])/sample_rate)))] 
              for i in range(len(cut_samples) - 1)}
 
+    subfiles = "{} be sliced to {:d} sub files".format(input_file,len(cut_samples))
     for i, start, stop in tqdm(cut_ranges):
         output_file_path = "{}_{:03d}.wav".format(os.path.join(output_dir, output_filename_prefix),i)
         if not dry_run:
-            print("Writing file {}".format(output_file_path))
+            # print("Writing file {}".format(output_file_path))
             wavfile.write(filename=output_file_path,rate=sample_rate,data=samples[start:stop])
         else:
-            print("Not writing file {}".format(output_file_path))
-        
+            print("Not writing sliced file {}".format(output_file_path))
+    print( "[DONE] %s" % subfiles )
     with open (output_dir+'\\'+output_filename_prefix+'.json', 'w') as output:
         json.dump(video_sub, output)
 
@@ -150,4 +151,13 @@ for file in files:
     fpath = os.path.join( abs_dir, file )
     print( "IN-WAV:{%s}" % fpath )
     print( "OUTPUT:{%s}" % abs_out_dir)
-    do_slice_wav(fpath,abs_out_dir) 
+    # do_slice_wav(fpath,abs_out_dir) 
+    # continue
+    try:
+        do_slice_wav(fpath,abs_out_dir) 
+    except:
+        print( "[FAILED] Process WAVE file failed:%s" % fpath )
+    else:
+        print( "[SUCCES] Slice WAVE file success:%s" % fpath )
+    print( "." )
+

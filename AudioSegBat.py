@@ -136,7 +136,7 @@ def do_slice_wav(input_file,output_dir):
 print( "Python Version:%s\n" % platform.python_version())
 # print( sys.argv[0] )
 if 3 != len(sys.argv):
-    print("Usage: python AudioSliceDir.py <Source-Wave-File-Dir> <Output-Sliced-Wave-File_dir>\n")
+    print("Usage: python AudioSegBat.py <Source-Wave-File-Dir> <Output-Sliced-Wave-File_dir>\n")
     sys.exit(-1)
 
 dir_path = sys.argv[1]

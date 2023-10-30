@@ -110,7 +110,7 @@ def do_slice_wav(input_file,output_dir):
     cut_times = (r * step_duration for r in rising_edges(window_silence))
 
     # This is the step that takes long, since we force the generators to run.
-    print("Finding silences...")
+    print("[INFO] Finding silences...")
     cut_samples = [int(t * sample_rate) for t in cut_times]
     cut_samples.append(-1)
 
@@ -120,44 +120,57 @@ def do_slice_wav(input_file,output_dir):
                        str(GetTime(((cut_samples[i+1])/sample_rate)))] 
              for i in range(len(cut_samples) - 1)}
 
-    subfiles = "{} be sliced to {:d} sub files".format(input_file,len(cut_samples))
+    subfiles = "[INFO] {} will be sliced to {:d} sub files".format(input_file,len(cut_samples))
     for i, start, stop in tqdm(cut_ranges):
         output_file_path = "{}_{:03d}.wav".format(os.path.join(output_dir, output_filename_prefix),i)
         if not dry_run:
             # print("Writing file {}".format(output_file_path))
             wavfile.write(filename=output_file_path,rate=sample_rate,data=samples[start:stop])
         else:
-            print("Not writing sliced file {}".format(output_file_path))
+            print("[ERROR] Not writing sliced file {}".format(output_file_path))
+            return False
     print( "[DONE] %s" % subfiles )
-    with open (output_dir+'\\'+output_filename_prefix+'.json', 'w') as output:
+    fpjson = os.path.join( output_dir, output_filename_prefix + ".json" )
+    with open ( fpjson, 'w') as output:
         json.dump(video_sub, output)
+    return True
 
+if __name__ == "__main__":
+    print( "Python Version:%s\n" % platform.python_version())
+    # print( sys.argv[0] )
+    if 3 != len(sys.argv):
+        print("Usage: python AudioSegBat.py <Source-Wave-File-Dir> <Output-Sliced-Wave-File_dir>\n")
+        sys.exit(-1)
 
-print( "Python Version:%s\n" % platform.python_version())
-# print( sys.argv[0] )
-if 3 != len(sys.argv):
-    print("Usage: python AudioSegBat.py <Source-Wave-File-Dir> <Output-Sliced-Wave-File_dir>\n")
-    sys.exit(-1)
+    dir_path = sys.argv[1]
+    out_dir  = sys.argv[2]
+    batchSlide( dir_path, out_dir )
 
-dir_path = sys.argv[1]
-out_dir  = sys.argv[2]
-abs_out_dir = os.path.abspath(out_dir)
-abs_dir = os.path.abspath(dir_path)
-files = [os.path.join(abs_dir, file) for file in os.listdir(abs_dir)]
-for file in files:
-    file_extension = os.path.splitext(file)[-1].lower()
-    if file_extension != '.wav':
-        continue
-    fpath = os.path.join( abs_dir, file )
-    print( "IN-WAV:{%s}" % fpath )
-    print( "OUTPUT:{%s}" % abs_out_dir)
-    # do_slice_wav(fpath,abs_out_dir) 
-    # continue
+def doSlide( fpath, out_dir ):
     try:
-        do_slice_wav(fpath,abs_out_dir) 
+        return do_slice_wav(fpath,out_dir) 
     except:
-        print( "[FAILED] Process WAVE file failed:%s" % fpath )
-    else:
-        print( "[SUCCES] Slice WAVE file success:%s" % fpath )
-    print( "." )
+        return False
+    return False
+
+def batchSlide( dir_path, out_dir ):
+    abs_out_dir = os.path.abspath(out_dir)
+    abs_dir = os.path.abspath(dir_path)
+    files = [os.path.join(abs_dir, file) for file in os.listdir(abs_dir)]
+    for file in files:
+        file_extension = os.path.splitext(file)[-1].lower()
+        if file_extension != '.wav':
+            continue
+        fpath = os.path.join( abs_dir, file )
+        print( "IN-WAV:{%s}" % fpath )
+        print( "OUTPUT:{%s}" % abs_out_dir)
+        # do_slice_wav(fpath,abs_out_dir) 
+        # continue
+        try:
+            do_slice_wav(fpath,abs_out_dir) 
+        except:
+            print( "[FAILED] Process WAVE file failed:%s" % fpath )
+        else:
+            print( "[SUCCES] Slice WAVE file success:%s" % fpath )
+        print( "." )
 
